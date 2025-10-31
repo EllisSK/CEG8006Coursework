@@ -5,5 +5,7 @@ description = "Code written for the data analysis report coursework of the CEG80
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "geopandas>=1.1.1",
     "pandas>=2.3.3",
+    "requests>=2.32.5",
 ]
