@@ -1,5 +1,8 @@
+from ou_api_interface import *
+
+
 def main():
-    print("Hello from coursework!")
+    pass
 
 
 if __name__ == "__main__":
