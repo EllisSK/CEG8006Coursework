@@ -1,7 +1,8 @@
 import requests
+import datetime
+
 import geopandas as gpd
 import pandas as pd
-import datetime
 
 
 def get_sensor_locations() -> gpd.GeoDataFrame:
@@ -35,7 +36,7 @@ def get_sensor_locations() -> gpd.GeoDataFrame:
         )
         return gdf
     else:
-        raise ValueError("Bad HTTP Response")
+        raise ValueError(f"Bad HTTP Response: Status Code {response.status_code}")
 
 
 def get_sensor_timeseries(
@@ -45,7 +46,9 @@ def get_sensor_timeseries(
     Function that gets a timeseries of sensor data from a given sensor on the urban observatory API between two datetimes.
 
     sensor_name: Name of the sensor in the urban observatory API.
+
     start_datetime: Datetime object the timeseries should start from.
+
     end_datetime: Datetime object the timeseries should end at.
     """
 
