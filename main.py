@@ -20,9 +20,11 @@ def main():
 
     gdf = gdf.sjoin(newcastle_boundry, "inner")
 
-    fig = plot_sensor_locations(gdf)
+    gdf = classify_sensor_locations(gdf)
 
-    fig.show()
+    fig0 = plot_sensor_locations(gdf)
+
+    fig0.show()
 
 
 

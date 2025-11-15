@@ -13,7 +13,8 @@ def plot_sensor_locations(gdf: gpd.GeoDataFrame) -> go.Figure:
         gdf,
         lat="lat",
         lon="lon",
-        hover_name="Sensor_Name"
+        hover_name="Sensor_Name",
+        color="Sensor_Type"
     )
 
     
