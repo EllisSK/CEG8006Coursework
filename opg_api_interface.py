@@ -2,15 +2,11 @@ import requests
 
 import geopandas as gpd
 
+
 def get_boundry_of_location(location: str) -> gpd.GeoDataFrame:
     url = f" https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_December_2023_Boundaries_UK_BGC/FeatureServer/0/query"
 
-    p = {
-    "where": location,
-    "outFields": "*",
-    "outSR": "4326",
-    "f": "geojson"
-    }
+    p = {"where": location, "outFields": "*", "outSR": "4326", "f": "geojson"}
 
     response = requests.get(url, p)
 
