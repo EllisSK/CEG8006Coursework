@@ -31,6 +31,8 @@ def main():
 
     fig0.show()
 
+    sensor_list = ["PER_TTN_SENSECAP_AIR_01", "PER_TTN_SENSECAP_AIR_01"]
+
 
 if __name__ == "__main__":
     main()

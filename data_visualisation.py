@@ -11,7 +11,7 @@ def plot_sensor_locations(gdf: gpd.GeoDataFrame) -> go.Figure:
     gdf["lat"] = gdf.geometry.y
 
     fig = px.scatter_map(
-        gdf, lat="lat", lon="lon", hover_name="Sensor_Name", color="Sensor_Type"
+        gdf, lat="lat", lon="lon", hover_name="Sensor_Name", color="Sensor_Type", map_style="open-street-map"
     )
 
     return fig

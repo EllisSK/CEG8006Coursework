@@ -62,3 +62,59 @@ def get_sensor_timeseries(
         return df
     else:
         raise ValueError("Bad HTTP Response")
+    
+def get_sensor_timeseries_start(sensor_name: str) -> datetime.datetime:
+    p = {"limit": 1, "start": datetime.datetime(1970,1,1), "end": datetime.datetime.now()}
+    response = requests.get(
+        f"https://api.v2.urbanobservatory.ac.uk/sensors/{sensor_name}/data/json", p
+    )
+    if response.ok:
+        data = response.json()
+        df = pd.DataFrame(data["Readings"])
+        timestamp_str = df.iloc[0]['Timestamp']
+        return pd.to_datetime(timestamp_str)
+    else:
+        raise ValueError("Bad HTTP Response")
+
+def get_sensor_timeseries_end(sensor_name: str) -> datetime.datetime:
+    response = requests.get(
+        f"https://api.v2.urbanobservatory.ac.uk/sensors/{sensor_name}/data/json"
+    )
+    if response.ok:
+        data = response.json()
+        df = pd.DataFrame(data["Readings"])
+        timestamp_str = df.iloc[-1]['Timestamp']
+        return pd.to_datetime(timestamp_str)
+    else:
+        raise ValueError("Bad HTTP Response")
+    
+def get_sensors_timeseries(sensors: list[str], sensor_gdf: gpd.GeoDataFrame, start_datetime: datetime.datetime, end_datetime: datetime.datetime) -> gpd.GeoDataFrame:
+    master_gdf = gpd.GeoDataFrame(columns=["Sensor Name", "Sensor Location", "Timestamp", "Value"])
+    
+    gdf_list = []
+    sensor_gdf = sensor_gdf.set_index("Sensor_Name")
+
+    for sensor in sensors:
+        location = sensor_gdf.loc[sensor, "geometry"]
+        timeseries = get_sensor_timeseries(sensor, start_datetime, end_datetime)
+        
+        if timeseries.empty:
+            continue
+
+        current_gdf = gpd.GeoDataFrame(
+            timeseries, 
+            geometry=location, 
+            crs="EPSG:4326"
+        )
+
+        current_gdf["Sensor Name"] = sensor
+        
+        gdf_list.append(current_gdf)
+        
+    if len(gdf_list) != 0:    
+        concatenated_df = pd.concat(gdf_list, ignore_index=True)
+
+        master_gdf = gpd.GeoDataFrame(concatenated_df, geometry="geometry", crs="EPSG:4326")
+
+        master_gdf.sort_values("Timestamp", inplace= True)
+    return master_gdf
