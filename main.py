@@ -16,7 +16,7 @@ def main():
 
     gdf = get_sensor_locations()
 
-    newcastle_boundry = get_boundry_of_location("LAD23NM = 'Newcastle upon Tyne'")[["geometry"]]
+    newcastle_boundry = get_boundry_of_location("Newcastle upon Tyne")[["geometry"]]
 
     gdf = gdf.sjoin(newcastle_boundry, "inner")
     gdf.drop(columns=["index_right"], inplace=True)
