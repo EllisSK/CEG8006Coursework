@@ -59,6 +59,8 @@ def get_sensor_timeseries(
     if response.ok:
         data = response.json()
         df = pd.DataFrame(data["Readings"])
+        df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+        df.set_index("Timestamp", inplace=True)
         return df
     else:
         raise ValueError("Bad HTTP Response")
@@ -71,7 +73,7 @@ def get_sensor_timeseries_start(sensor_name: str) -> datetime.datetime:
     if response.ok:
         data = response.json()
         df = pd.DataFrame(data["Readings"])
-        timestamp_str = df.iloc[0]['Timestamp']
+        timestamp_str = df.iloc[0]["Timestamp"]
         return pd.to_datetime(timestamp_str)
     else:
         raise ValueError("Bad HTTP Response")
@@ -83,14 +85,16 @@ def get_sensor_timeseries_end(sensor_name: str) -> datetime.datetime:
     if response.ok:
         data = response.json()
         df = pd.DataFrame(data["Readings"])
-        timestamp_str = df.iloc[-1]['Timestamp']
+        timestamp_str = df.iloc[-1]["Timestamp"]
         return pd.to_datetime(timestamp_str)
     else:
         raise ValueError("Bad HTTP Response")
     
 def get_sensors_timeseries(sensors: list[str], sensor_gdf: gpd.GeoDataFrame, start_datetime: datetime.datetime, end_datetime: datetime.datetime) -> gpd.GeoDataFrame:
-    master_gdf = gpd.GeoDataFrame(columns=["Sensor Name", "Sensor Location", "Timestamp", "Value"])
+    master_gdf = gpd.GeoDataFrame(columns=["Sensor_Name", "Sensor_Location", "Timestamp", "Value"])
+    master_gdf.set_index("Timestamp", inplace=True)
     
+    sensor_gdf = sensor_gdf.copy()
     gdf_list = []
     sensor_gdf = sensor_gdf.set_index("Sensor_Name")
 
@@ -100,21 +104,28 @@ def get_sensors_timeseries(sensors: list[str], sensor_gdf: gpd.GeoDataFrame, sta
         
         if timeseries.empty:
             continue
+        
+        timeseries.reset_index(inplace=True)
+        timeseries["Timestamp"] = pd.to_datetime(timeseries["Timestamp"])
+        timeseries["geometry"] = location
 
         current_gdf = gpd.GeoDataFrame(
             timeseries, 
-            geometry=location, 
+            geometry="geometry", 
             crs="EPSG:4326"
         )
 
-        current_gdf["Sensor Name"] = sensor
+        current_gdf["Sensor_Name"] = sensor
+
+        current_gdf.set_index("Timestamp", inplace=True)
         
         gdf_list.append(current_gdf)
         
     if len(gdf_list) != 0:    
-        concatenated_df = pd.concat(gdf_list, ignore_index=True)
+        concatenated_df = pd.concat(gdf_list, ignore_index=False)
 
         master_gdf = gpd.GeoDataFrame(concatenated_df, geometry="geometry", crs="EPSG:4326")
 
-        master_gdf.sort_values("Timestamp", inplace= True)
+    master_gdf.sort_index(inplace=True)
+
     return master_gdf

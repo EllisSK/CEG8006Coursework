@@ -33,6 +33,13 @@ def main():
 
     sensor_list = ["PER_TTN_SENSECAP_AIR_01", "PER_TTN_SENSECAP_AIR_01"]
 
+    start = datetime.datetime(2025,1,1)
+    end = datetime.datetime(2025,2,1)
+    timeseries = get_sensor_timeseries("PER_TTN_SENSECAP_AIR_01", start, end)
+    print(timeseries.head())
+    multiple_timeseries = get_sensors_timeseries(sensor_list, gdf, start, end)
+    print(multiple_timeseries.head())
+
 
 if __name__ == "__main__":
     main()

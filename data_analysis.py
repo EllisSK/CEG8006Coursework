@@ -1,3 +1,5 @@
+import datetime
+
 import pandas as pd
 import geopandas as gpd
 import numpy as np
@@ -16,3 +18,6 @@ def classify_sensor_locations(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     gdf["Sensor_Type"] = np.select(sensor_strings, classes, default="Other")
 
     return gdf
+
+def decompose_timeseries():
+    pass

@@ -11,11 +11,31 @@ def plot_sensor_locations(gdf: gpd.GeoDataFrame) -> go.Figure:
     gdf["lat"] = gdf.geometry.y
 
     fig = px.scatter_map(
-        gdf, lat="lat", lon="lon", hover_name="Sensor_Name", color="Sensor_Type", map_style="open-street-map"
+        gdf, lat="lat",
+        lon="lon",
+        hover_name="Sensor_Name",
+        color="Sensor_Type",
+        map_style="open-street-map",
+        title= "Sensor Locations within Newcastle Upon-Tyne"
     )
 
     return fig
 
+def plot_sensor_timseries(df: pd.DataFrame, variable: str) -> go.Figure:
+    df = df.copy()
+
+    df = df[df["Variable"] == variable]
+
+    fig = px.line(
+        df,
+        x=df.index,
+        y="Value"
+    )
+    
+    return fig
 
 def create_air_polution_heatmap():
+    pass
+
+def create_decomposed_timeseries_plot():
     pass
