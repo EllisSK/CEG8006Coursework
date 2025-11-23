@@ -31,14 +31,20 @@ def main():
 
     fig0.show()
 
-    sensor_list = ["PER_TTN_SENSECAP_AIR_01", "PER_TTN_SENSECAP_AIR_01"]
+    sensor_list = ["PER_TTN_SENSECAP_AIR_01", "PER_TTN_SENSECAP_AIR_02"]
 
     start = datetime.datetime(2025,1,1)
-    end = datetime.datetime(2025,2,1)
+    end = datetime.datetime(2025,5,1)
     timeseries = get_sensor_timeseries("PER_TTN_SENSECAP_AIR_01", start, end)
     print(timeseries.head())
-    multiple_timeseries = get_sensors_timeseries(sensor_list, gdf, start, end)
-    print(multiple_timeseries.head())
+    multiple_timeseries = get_sensors_timeseries(sensor_list, start, end)
+    print(multiple_timeseries.head(), multiple_timeseries["Variable"].unique())
+
+    multiple_timeseries = resample_sensors_timeseries(multiple_timeseries, "1h")
+    print(multiple_timeseries.head(), multiple_timeseries["Variable"].unique())
+
+    fig1 = plot_sensor_timseries(multiple_timeseries, "Internal Temperature")
+    fig1.show()
 
 
 if __name__ == "__main__":

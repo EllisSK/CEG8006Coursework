@@ -29,7 +29,11 @@ def plot_sensor_timseries(df: pd.DataFrame, variable: str) -> go.Figure:
     fig = px.line(
         df,
         x=df.index,
-        y="Value"
+        y="Value",
+        color="Sensor_Name",
+        labels={
+            "Value" : variable
+        }
     )
     
     return fig

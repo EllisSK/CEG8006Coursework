@@ -90,16 +90,13 @@ def get_sensor_timeseries_end(sensor_name: str) -> datetime.datetime:
     else:
         raise ValueError("Bad HTTP Response")
     
-def get_sensors_timeseries(sensors: list[str], sensor_gdf: gpd.GeoDataFrame, start_datetime: datetime.datetime, end_datetime: datetime.datetime) -> gpd.GeoDataFrame:
-    master_gdf = gpd.GeoDataFrame(columns=["Sensor_Name", "Sensor_Location", "Timestamp", "Value"])
-    master_gdf.set_index("Timestamp", inplace=True)
+def get_sensors_timeseries(sensors: list[str], start_datetime: datetime.datetime, end_datetime: datetime.datetime) -> pd.DataFrame:
+    master_df = pd.DataFrame(columns=["Sensor_Name", "Sensor_Location", "Timestamp", "Value"])
+    master_df.set_index("Timestamp", inplace=True)
     
-    sensor_gdf = sensor_gdf.copy()
-    gdf_list = []
-    sensor_gdf = sensor_gdf.set_index("Sensor_Name")
+    df_list = []
 
     for sensor in sensors:
-        location = sensor_gdf.loc[sensor, "geometry"]
         timeseries = get_sensor_timeseries(sensor, start_datetime, end_datetime)
         
         if timeseries.empty:
@@ -107,25 +104,18 @@ def get_sensors_timeseries(sensors: list[str], sensor_gdf: gpd.GeoDataFrame, sta
         
         timeseries.reset_index(inplace=True)
         timeseries["Timestamp"] = pd.to_datetime(timeseries["Timestamp"])
-        timeseries["geometry"] = location
 
-        current_gdf = gpd.GeoDataFrame(
-            timeseries, 
-            geometry="geometry", 
-            crs="EPSG:4326"
-        )
+        current_df = timeseries
 
-        current_gdf["Sensor_Name"] = sensor
+        current_df["Sensor_Name"] = sensor
 
-        current_gdf.set_index("Timestamp", inplace=True)
+        current_df.set_index("Timestamp", inplace=True)
         
-        gdf_list.append(current_gdf)
+        df_list.append(current_df)
         
-    if len(gdf_list) != 0:    
-        concatenated_df = pd.concat(gdf_list, ignore_index=False)
+    if len(df_list) != 0:    
+        concatenated_df = pd.concat(df_list, ignore_index=False)
 
-        master_gdf = gpd.GeoDataFrame(concatenated_df, geometry="geometry", crs="EPSG:4326")
+    concatenated_df.sort_index(inplace=True)
 
-    master_gdf.sort_index(inplace=True)
-
-    return master_gdf
+    return concatenated_df

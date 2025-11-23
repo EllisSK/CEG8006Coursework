@@ -19,5 +19,23 @@ def classify_sensor_locations(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
     return gdf
 
+def resample_sensors_timeseries(df: pd.DataFrame, freq: str) -> pd.DataFrame:
+    grouped = df.groupby(["Sensor_Name", "Variable"]).resample(freq)
+    
+    resampled_data = grouped.agg({
+        "Value": "mean",
+        "Flagged": "max"
+    })
+
+    resampled_data = resampled_data.dropna(subset=["Value"])
+
+    df = resampled_data.reset_index(level=["Sensor_Name", "Variable"])
+
+    df = df[["Sensor_Name", "Variable", "Value", "Flagged"]]
+    
+    df = df.sort_index()
+
+    return df
+
 def decompose_timeseries():
     pass
