@@ -3,9 +3,30 @@ import geopandas as gpd
 import plotly.express as px
 import plotly.graph_objects as go
 
+from shapely.geometry import Point
+
 
 def plot_sensor_locations(gdf: gpd.GeoDataFrame) -> go.Figure:
     gdf = gdf.copy()
+
+    gdf["lon"] = gdf.geometry.x
+    gdf["lat"] = gdf.geometry.y
+
+    fig = px.scatter_map(
+        gdf, lat="lat",
+        lon="lon",
+        hover_name="Sensor_Name",
+        color="Sensor_Type",
+        map_style="open-street-map",
+        title= "Sensor Locations within Newcastle Upon-Tyne"
+    )
+
+    return fig
+
+def plot_sensors_and_point(gdf: gpd.GeoDataFrame, point: Point, name: str, type: str) -> go.Figure:
+    gdf = gdf.copy()
+    
+    gdf.loc[len(gdf)] = [name,point,type]
 
     gdf["lon"] = gdf.geometry.x
     gdf["lat"] = gdf.geometry.y

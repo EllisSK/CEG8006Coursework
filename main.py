@@ -23,28 +23,30 @@ def main():
 
     gdf = classify_sensor_locations(gdf)
 
-    gdf = gdf[gdf["Sensor_Type"].isin(("People", "Air Quality", "Vehicles"))]
+    key_sensor_types = ["People", "Air Quality", "Vehicles"]
 
-    gdf.loc[len(gdf)] = ["Moorview Green",new_building_location,"New Building"]
+    gdf = filter_by_sensor_type(gdf, key_sensor_types)
+
+    three_closest_air_quality = find_closest_sensors(gdf, new_building_location, "Air Quality", 15)
+    three_closest_vehicles = find_closest_sensors(gdf, new_building_location, "Vehicles", 5)
+
+    print(three_closest_air_quality,"\n",three_closest_vehicles)
 
     fig0 = plot_sensor_locations(gdf)
 
     fig0.show()
 
-    sensor_list = ["PER_TTN_SENSECAP_AIR_01", "PER_TTN_SENSECAP_AIR_02"]
+    sensor_list = ["PER_TTN_AIRQUALITY012", "PER_NE_CAJT_NCA167_NBS1_CG", "PER_NE_CAJT_NCA167_CG_NBS1"]
 
-    start = datetime.datetime(2025,1,1)
-    end = datetime.datetime(2025,5,1)
-    timeseries = get_sensor_timeseries("PER_TTN_SENSECAP_AIR_01", start, end)
-    print(timeseries.head())
+    start = datetime.datetime(2025,5,5)
+    end = datetime.datetime.now()
     multiple_timeseries = get_sensors_timeseries(sensor_list, start, end)
-    print(multiple_timeseries.head(), multiple_timeseries["Variable"].unique())
-
-    multiple_timeseries = resample_sensors_timeseries(multiple_timeseries, "1h")
-    print(multiple_timeseries.head(), multiple_timeseries["Variable"].unique())
-
-    fig1 = plot_sensor_timseries(multiple_timeseries, "Internal Temperature")
+    multiple_timeseries = resample_sensors_timeseries(multiple_timeseries, "1d")
+    print(multiple_timeseries["Variable"].unique())
+    fig1 = plot_sensor_timseries(multiple_timeseries, "Journey Time")
+    fig2 = plot_sensor_timseries(multiple_timeseries, "PM2.5")
     fig1.show()
+    fig2.show()
 
 
 if __name__ == "__main__":

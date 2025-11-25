@@ -95,9 +95,14 @@ def get_sensors_timeseries(sensors: list[str], start_datetime: datetime.datetime
     master_df.set_index("Timestamp", inplace=True)
     
     df_list = []
+    failed_sensors = []
 
     for sensor in sensors:
-        timeseries = get_sensor_timeseries(sensor, start_datetime, end_datetime)
+        try:
+            timeseries = get_sensor_timeseries(sensor, start_datetime, end_datetime)
+        except:
+            failed_sensors.append(sensor)
+            continue
         
         if timeseries.empty:
             continue
@@ -116,6 +121,8 @@ def get_sensors_timeseries(sensors: list[str], start_datetime: datetime.datetime
     if len(df_list) != 0:    
         concatenated_df = pd.concat(df_list, ignore_index=False)
 
-    concatenated_df.sort_index(inplace=True)
+        concatenated_df.sort_index(inplace=True)
 
-    return concatenated_df
+        return concatenated_df
+    else:
+        raise Exception("Error fetching data")
