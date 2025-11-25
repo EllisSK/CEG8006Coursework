@@ -9,3 +9,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Other
+report_ideas.md

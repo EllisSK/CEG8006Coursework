@@ -40,7 +40,7 @@ def find_closest_sensors(gdf: gpd.GeoDataFrame, point: Point, sensor_type: str, 
     gdf.sort_values("Distance", inplace=True)
 
     l = []
-    for sensor in gdf["Sensor_Name"][0:n+1]:
+    for sensor in gdf["Sensor_Name"][0:n]:
         l.append(sensor)
     
     return l
