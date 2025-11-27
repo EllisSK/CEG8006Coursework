@@ -3,8 +3,11 @@ import datetime
 import pandas as pd
 import geopandas as gpd
 import numpy as np
+import osmnx as ox
+import networkx as nx
 
 from shapely.geometry import Point
+from shapely.ops import unary_union
 from typing import Union, List
 
 
@@ -62,6 +65,41 @@ def resample_sensors_timeseries(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     df = df.sort_index()
 
     return df
+
+def get_road_geometries(wkt_df: pd.DataFrame) -> gpd.GeoDataFrame:
+    graph = ox.graph_from_place("Newcastle upon Tyne, UK", network_type="drive")
+    graph_proj = ox.project_graph(graph)
+    
+    gSeries = gpd.GeoSeries.from_wkt(wkt_df["Location_WKT"])
+    
+    final_geometries = []
+
+    for geometry in gSeries:
+        start_point = geometry.coords[0]
+        end_point = geometry.coords[-1]
+
+        orig_node = ox.nearest_nodes(graph, X=start_point[0], Y=start_point[1])
+        dest_node = ox.nearest_nodes(graph, X=end_point[0], Y=end_point[1])
+
+        try:
+            route_nodes = nx.shortest_path(graph_proj, orig_node, dest_node, weight="length")
+            
+            route_gdf = ox.routing.route_to_gdf(graph_proj, route_nodes, weight="length")
+            combined_line_proj = unary_union(route_gdf.geometry)
+            
+            combined_line_4326 = gpd.GeoSeries([combined_line_proj], crs=graph_proj.graph["crs"]).to_crs("EPSG:4326").iloc[0]
+            
+            final_geometries.append(combined_line_4326)
+            
+        except (nx.NetworkXNoPath, ValueError):
+            print(f"Routing failed, keeping original straight line.")
+            final_geometries.append(geometry)
+
+    gdf = gpd.GeoDataFrame(wkt_df, geometry=final_geometries, crs="EPSG:4326")
+
+    gdf["road_length(m)"] = gdf.to_crs(gdf.estimate_utm_crs()).length
+    
+    return gdf
 
 def create_correlation_matrix(df: pd.DataFrame) -> pd.DataFrame:
     

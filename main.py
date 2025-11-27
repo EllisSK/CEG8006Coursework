@@ -27,15 +27,18 @@ def main():
 
     gdf = filter_by_sensor_type(gdf, key_sensor_types)
 
-    three_closest_air_quality = find_closest_sensors(gdf, new_building_location, "Air Quality", 15)
-    three_closest_vehicles = find_closest_sensors(gdf, new_building_location, "Vehicles", 5)
+    #fig0 = plot_sensor_locations(gdf)
 
-    print(three_closest_air_quality,"\n",three_closest_vehicles)
+    #fig0.show()
 
-    fig0 = plot_sensor_locations(gdf)
+    closest_air_quality = find_closest_sensors(gdf, new_building_location, "Air Quality", 50)
+    closest_vehicle = find_closest_sensors(gdf, new_building_location, "Vehicles", 20)
 
-    fig0.show()
+    roads = get_sensors_wkt(closest_vehicle)
+    road_geometries = get_road_geometries(roads)
+    print(road_geometries.head(10))
 
+    """
     sensor_list = ["PER_TTN_AIRQUALITY012", "PER_NE_CAJT_NCA167_NBS1_CG", "PER_NE_CAJT_NCA167_CG_NBS1"]
 
     start = datetime.datetime(2025,5,5)
@@ -47,6 +50,7 @@ def main():
     fig2 = plot_sensor_timseries(multiple_timeseries, "PM2.5")
     fig1.show()
     fig2.show()
+    """
 
 
 if __name__ == "__main__":
