@@ -29,7 +29,6 @@ def get_sensor_locations() -> gpd.GeoDataFrame:
                 "Location_WKT",
                 "Ground_Height_Above_Sea_Level",
                 "Sensor_Height_Above_Ground",
-                "Broker_Name",
                 "Raw_ID",
             ],
             inplace=True,

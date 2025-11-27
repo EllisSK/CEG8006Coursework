@@ -10,30 +10,18 @@ from shapely.geometry import Point
 from shapely.ops import unary_union
 from typing import Union, List
 
+from uo_api_interface import *
 
-def classify_sensor_locations(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    sensor_strings = [
-        gdf["Sensor_Name"].str.startswith(("PER_TTN", "PER_AIRMON")),
-        gdf["Sensor_Name"].str.startswith("PER_PEOPLE"),
-        gdf["Sensor_Name"].str.startswith("PER_NE_CAJT"),
-        gdf["Sensor_Name"].str.startswith(("PER_BUILDING", "PER_INTERNAL_BUILDING")),
-    ]
 
-    classes = ["Air Quality", "People", "Vehicles", "Building"]
-
-    gdf["Sensor_Type"] = np.select(sensor_strings, classes, default="Other")
-
-    return gdf
-
-def filter_by_sensor_type(gdf: gpd.GeoDataFrame, sensor_types: Union[str, List[str]]) -> gpd.GeoDataFrame:
-    if isinstance(sensor_types, str):
-        sensor_types = [sensor_types]
+def filter_by_broker_name(gdf: gpd.GeoDataFrame, broker_names: Union[str, List[str]]) -> gpd.GeoDataFrame:
+    if isinstance(broker_names, str):
+        broker_names = [broker_names]
     
-    return gdf[gdf["Sensor_Type"].isin(sensor_types)]
+    return gdf[gdf["Broker_Name"].isin(broker_names)]
 
-def find_closest_sensors(gdf: gpd.GeoDataFrame, point: Point, sensor_type: str, n: int) -> list[str]:
+def find_closest_sensors(gdf: gpd.GeoDataFrame, point: Point, broker_name: str, n: int) -> list[str]:
     gdf = gdf.copy()
-    gdf = filter_by_sensor_type(gdf, sensor_type)
+    gdf = filter_by_broker_name(gdf, broker_name)
 
     fixed_point = gpd.GeoSeries([point], crs=gdf.crs).to_crs("EPSG:27700")[0]
 
