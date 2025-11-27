@@ -5,62 +5,29 @@ import plotly.graph_objects as go
 
 from shapely.geometry import Point
 
+def create_all_sensors_within_boundary_plot():
+    pass
 
-def plot_sensor_locations(gdf: gpd.GeoDataFrame) -> go.Figure:
-    gdf = gdf.copy()
+def create_simple_sensor_location_plot():
+    pass
 
-    gdf["lon"] = gdf.geometry.x
-    gdf["lat"] = gdf.geometry.y
+def create_road_link_plot():
+    pass
 
-    fig = px.scatter_map(
-        gdf, lat="lat",
-        lon="lon",
-        hover_name="Sensor_Name",
-        color="Sensor_Type",
-        map_style="open-street-map",
-        title= "Sensor Locations within Newcastle Upon-Tyne"
-    )
+def create_air_quality_sensor_location_plot():
+    pass
 
-    return fig
+def create_air_quality_road_links_site_location_plot():
+    pass
 
-def plot_sensors_and_point(gdf: gpd.GeoDataFrame, point: Point, name: str, type: str) -> go.Figure:
-    gdf = gdf.copy()
-    
-    gdf.loc[len(gdf)] = [name,point,type]
+def create_air_quality_line_plot():
+    pass
 
-    gdf["lon"] = gdf.geometry.x
-    gdf["lat"] = gdf.geometry.y
-
-    fig = px.scatter_map(
-        gdf, lat="lat",
-        lon="lon",
-        hover_name="Sensor_Name",
-        color="Sensor_Type",
-        map_style="open-street-map",
-        title= "Sensor Locations within Newcastle Upon-Tyne"
-    )
-
-    return fig
-
-def plot_sensor_timseries(df: pd.DataFrame, variable: str) -> go.Figure:
-    df = df.copy()
-
-    df = df[df["Variable"] == variable]
-
-    fig = px.line(
-        df,
-        x=df.index,
-        y="Value",
-        color="Sensor_Name",
-        labels={
-            "Value" : variable
-        }
-    )
-    
-    return fig
-
-def create_air_polution_heatmap():
+def create_journey_time_line_plot():
     pass
 
 def create_decomposed_timeseries_plot():
+    pass
+
+def create_air_polution_heatmap():
     pass
