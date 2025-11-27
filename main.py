@@ -23,16 +23,16 @@ def main():
 
     gdf = filter_by_broker_name(gdf, sensors_to_use)
 
-    #fig0 = plot_sensor_locations(gdf)
-
-    #fig0.show()
-
     closest_air_quality = find_closest_sensors(gdf, new_building_location, "aq_mesh_api", 50)
     closest_vehicle = find_closest_sensors(gdf, new_building_location, "NE Travel Data API", 20)
 
     roads = get_sensors_wkt(closest_vehicle)
     road_geometries = get_road_geometries(roads)
-    print(road_geometries.head(10))
+    print(newcastle_boundry)
+
+    fig = create_all_sensors_within_boundary_plot(gdf, newcastle_boundry)
+
+    fig.show()
 
     """
     start = datetime.datetime(2025,5,5)
