@@ -89,7 +89,17 @@ def get_road_geometries(wkt_df: pd.DataFrame) -> gpd.GeoDataFrame:
     
     return gdf
 
-def create_correlation_matrix(df: pd.DataFrame) -> pd.DataFrame:
+def convert_long_df_to_wide(long_df: pd.DataFrame) -> pd.DataFrame:
+    long_df = long_df.copy()
+
+    long_df = long_df.reset_index()
+    long_df["Column_Name"] = long_df["Sensor_Name"] + "_" + long_df["Variable"]
+
+    wide_df = long_df.pivot(index = "Timestamp", columns= "Column_Name", values= "Value")
+
+    return wide_df
+
+def create_correlation_matrix(air_quality_df: pd.DataFrame, traffic_df:pd.DataFrame) -> pd.DataFrame:
     
     return pd.DataFrame()
 

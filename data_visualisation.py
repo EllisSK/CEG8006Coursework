@@ -75,6 +75,8 @@ def create_road_link_plot(road_geom: gpd.GeoDataFrame) -> go.Figure:
     lats = []
     lons = []
 
+    n = len(road_geom)
+
     for multi_line in road_geom.geometry:
         for line in multi_line.geoms:
             x, y = line.xy
@@ -98,16 +100,78 @@ def create_road_link_plot(road_geom: gpd.GeoDataFrame) -> go.Figure:
             center=dict(lat=54.983, lon=-1.6178),
             zoom=11
         ),
-        title="Traffic Sensor Routes"
+        title=f"Closest {n} Traffic Sensor Routes"
     )
 
     return fig
 
-def create_air_quality_sensor_location_plot():
-    pass
+def create_air_quality_sensor_location_plot(sensor_locations: gpd.GeoDataFrame) -> go.Figure:
+    sensor_locations = sensor_locations.copy()
+    
+    n = len(sensor_locations)
 
-def create_air_quality_road_links_site_location_plot():
-    pass
+    sensor_locations["lat"] = sensor_locations.geometry.y
+    sensor_locations["lon"] = sensor_locations.geometry.x
+
+    fig = px.scatter_mapbox(
+        sensor_locations,
+        lat="lat",
+        lon="lon", 
+        mapbox_style="open-street-map",
+        color="Broker_Name",
+        zoom=10,
+        center=dict(lat=54.983, lon=-1.6178),
+        title= f"Map of {n} Closest Air Quality Sensors"
+    )
+
+    return fig
+
+def create_air_quality_road_links_site_location_plot(sensor_locations: gpd.GeoDataFrame, road_geom: gpd.GeoDataFrame, building_location: Point):
+    sensor_locations = sensor_locations.copy()
+    road_geom = road_geom.copy()
+
+    sensor_locations["lat"] = sensor_locations.geometry.y
+    sensor_locations["lon"] = sensor_locations.geometry.x
+
+    names_dict = {
+        "aq_mesh_api" : "Air Quality Data"
+    }
+
+    sensor_locations["Broker_Name"] = sensor_locations["Broker_Name"].replace(names_dict)
+    
+    fig = px.scatter_mapbox(
+        sensor_locations, 
+        lat="lat", 
+        lon="lon", 
+        mapbox_style="open-street-map",
+        color="Broker_Name",
+        zoom=11.5,
+        center=dict(lat=54.983, lon=-1.6178),
+        title= "Map of Air Quality and Traffic Sensors Around the Proposed Site",
+        labels= {"Broker_Name" : "Type of Sensor"}
+    )
+
+    lats = []
+    lons = []
+
+    for multi_line in road_geom.geometry:
+        for line in multi_line.geoms:
+            x, y = line.xy
+            lats.extend(y)
+            lons.extend(x)
+            lats.append(None)
+            lons.append(None)
+
+    fig.add_trace(go.Scattermapbox(
+        lat=lats,
+        lon=lons,
+        mode="lines",
+        line=dict(width=3, color="red"),
+        name="Traffic Flow Routes",
+        showlegend=True,
+    ))
+    
+    return fig
 
 def create_air_quality_line_plot():
     pass

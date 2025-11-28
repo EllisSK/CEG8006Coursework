@@ -25,7 +25,12 @@ def main():
     fig = create_all_sensors_within_boundary_plot(relevant_sensors, newcastle_boundry)
     save_figure(fig, "all_sensors_within_boundary")
 
-    air_quality_sensors = find_closest_sensors(relevant_sensors, new_building_location, "aq_mesh_api", 50)
+    air_quality_sensors = find_closest_sensors(relevant_sensors, new_building_location, "aq_mesh_api", 30)
+    air_quality_sensor_locations = relevant_sensors[relevant_sensors["Sensor_Name"].isin(air_quality_sensors)]
+
+    fig = create_air_quality_sensor_location_plot(air_quality_sensor_locations)
+    save_figure(fig, "air_quality_sensors")
+
     vehicle_sensors = find_closest_sensors(relevant_sensors, new_building_location, "NE Travel Data API", 20)
 
     roads = get_sensors_wkt(vehicle_sensors)
@@ -34,17 +39,24 @@ def main():
     fig = create_road_link_plot(road_geometries)
     save_figure(fig, "traffic_routes")
 
-    """
-    start = datetime.datetime(2025,5,5)
-    end = datetime.datetime.now()
-    multiple_timeseries = get_sensors_timeseries(sensor_list, start, end)
-    multiple_timeseries = resample_sensors_timeseries(multiple_timeseries, "1d")
-    print(multiple_timeseries["Variable"].unique())
-    fig1 = plot_sensor_timseries(multiple_timeseries, "Journey Time")
-    fig2 = plot_sensor_timseries(multiple_timeseries, "PM2.5")
-    fig1.show()
-    fig2.show()
-    """
+    fig = create_air_quality_road_links_site_location_plot(air_quality_sensor_locations, road_geometries, new_building_location)
+    save_figure(fig, "sensors_roads_building")
+
+    #data_start = datetime.datetime(2023,5,5)
+    data_start = datetime.datetime(2025,11,1)
+    data_end = datetime.datetime.now()
+
+    air_quality_timeseries = get_sensors_timeseries(air_quality_sensors, data_start, data_end)
+    traffic_timeseries = get_sensors_timeseries(vehicle_sensors, data_start, data_end)
+
+    air_quality_timeseries = resample_sensors_timeseries(air_quality_timeseries, "1h")
+    traffic_timeseries = resample_sensors_timeseries(traffic_timeseries, "1h")
+
+    air_quality_timeseries = convert_long_df_to_wide(air_quality_timeseries)
+    traffic_timeseries = convert_long_df_to_wide(traffic_timeseries)
+
+    print(air_quality_timeseries.head(10))
+    print(traffic_timeseries.head(10))
 
 
 if __name__ == "__main__":
