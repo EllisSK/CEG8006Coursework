@@ -15,24 +15,24 @@ def main():
     new_building_location = Point((-1.6260, 54.9816)) #Update this
     newcastle_boundry = get_boundry_of_location("Newcastle upon Tyne")[["geometry"]]
 
-    gdf = get_sensor_locations()
-
-    gdf = gdf.sjoin(newcastle_boundry, "inner").drop(columns=["index_right"])
+    all_sensors = get_sensor_locations()
+    sensors_within_newcastle = all_sensors.sjoin(newcastle_boundry, "inner").drop(columns=["index_right"])
 
     sensors_to_use = ["NE Travel Data API", "aq_mesh_api"]
 
-    gdf = filter_by_broker_name(gdf, sensors_to_use)
+    relevant_sensors = filter_by_broker_name(sensors_within_newcastle, sensors_to_use)
 
-    closest_air_quality = find_closest_sensors(gdf, new_building_location, "aq_mesh_api", 50)
-    closest_vehicle = find_closest_sensors(gdf, new_building_location, "NE Travel Data API", 20)
+    fig = create_all_sensors_within_boundary_plot(relevant_sensors, newcastle_boundry)
+    save_figure(fig, "all_sensors_within_boundary")
 
-    roads = get_sensors_wkt(closest_vehicle)
+    air_quality_sensors = find_closest_sensors(relevant_sensors, new_building_location, "aq_mesh_api", 50)
+    vehicle_sensors = find_closest_sensors(relevant_sensors, new_building_location, "NE Travel Data API", 20)
+
+    roads = get_sensors_wkt(vehicle_sensors)
     road_geometries = get_road_geometries(roads)
-    print(newcastle_boundry)
 
-    fig = create_all_sensors_within_boundary_plot(gdf, newcastle_boundry)
-
-    fig.show()
+    fig = create_road_link_plot(road_geometries)
+    save_figure(fig, "traffic_routes")
 
     """
     start = datetime.datetime(2025,5,5)
