@@ -76,18 +76,44 @@ def get_sensor_timeseries(
     end_datetime: Datetime object the timeseries should end at.
     """
 
-    p = {"limit": -1, "start": start_datetime, "end": end_datetime}
-    response = requests.get(
-        f"https://api.v2.urbanobservatory.ac.uk/sensors/{sensor_name}/data/json", p
-    )
-    if response.ok:
+    base_url = f"https://api.v2.urbanobservatory.ac.uk/sensors/{sensor_name}/data/json"
+    limit = 1000
+    offset = 0
+    all_readings = []
+
+    while True:
+        params = {
+            "limit": limit,
+            "offset": offset,
+            "start": start_datetime,
+            "end": end_datetime
+        }
+
+        response = requests.get(base_url, params=params)
+
+        if not response.ok:
+            raise ValueError(f"Bad HTTP Response: Status Code {response.status_code}")
+
         data = response.json()
-        df = pd.DataFrame(data["Readings"])
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"])
-        df.set_index("Timestamp", inplace=True)
-        return df
-    else:
-        raise ValueError("Bad HTTP Response")
+        readings = data.get("Readings", [])
+
+        if not readings:
+            break
+
+        all_readings.extend(readings)
+
+        if len(readings) < limit:
+            break
+
+        offset += limit
+
+    if not all_readings:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(all_readings)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    df.set_index("Timestamp", inplace=True)
+    return df
     
 def get_sensor_timeseries_start(sensor_name: str) -> datetime.datetime:
     p = {"limit": 1, "start": datetime.datetime(1970,1,1), "end": datetime.datetime.now()}

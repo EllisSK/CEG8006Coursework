@@ -89,6 +89,12 @@ def get_road_geometries(wkt_df: pd.DataFrame) -> gpd.GeoDataFrame:
     
     return gdf
 
+def clip_timeseries_by_variable(df: pd.DataFrame, variables: Union[str, List[str]]) -> pd.DataFrame:
+    if isinstance(variables, str):
+        variables = [variables]
+
+    return df[df["Variable"].isin(variables)]
+
 def convert_long_df_to_wide(long_df: pd.DataFrame) -> pd.DataFrame:
     long_df = long_df.copy()
 
@@ -100,7 +106,7 @@ def convert_long_df_to_wide(long_df: pd.DataFrame) -> pd.DataFrame:
     return wide_df
 
 def create_correlation_matrix(air_quality_df: pd.DataFrame, traffic_df:pd.DataFrame) -> pd.DataFrame:
-    
+    #Remove days where wind speed avg is greater than 3m/s
     return pd.DataFrame()
 
 def decompose_timeseries():

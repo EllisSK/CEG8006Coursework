@@ -173,6 +173,10 @@ def create_air_quality_road_links_site_location_plot(sensor_locations: gpd.GeoDa
     
     return fig
 
+def crate_correlation_heatmap(corr_df:pd.DataFrame) -> go.Figure:
+    fig = px.imshow(corr_df)
+    fig.show()
+
 def create_air_quality_line_plot():
     pass
 

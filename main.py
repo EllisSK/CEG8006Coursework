@@ -12,7 +12,7 @@ from data_visualisation import *
 
 
 def main():
-    new_building_location = Point((-1.6260, 54.9816)) #Update this
+    new_building_location = Point((-1.625129, 54.981496))
     newcastle_boundry = get_boundry_of_location("Newcastle upon Tyne")[["geometry"]]
 
     all_sensors = get_sensor_locations()
@@ -42,22 +42,23 @@ def main():
     fig = create_air_quality_road_links_site_location_plot(air_quality_sensor_locations, road_geometries, new_building_location)
     save_figure(fig, "sensors_roads_building")
 
-    #data_start = datetime.datetime(2023,5,5)
-    data_start = datetime.datetime(2025,11,1)
+    data_start = datetime.datetime(2023,5,5)
     data_end = datetime.datetime.now()
 
     air_quality_timeseries = get_sensors_timeseries(air_quality_sensors, data_start, data_end)
     traffic_timeseries = get_sensors_timeseries(vehicle_sensors, data_start, data_end)
 
+    air_quality_timeseries = clip_timeseries_by_variable(air_quality_timeseries, "NO2")
+    traffic_timeseries = clip_timeseries_by_variable(traffic_timeseries, "Journey Time")
+    
     air_quality_timeseries = resample_sensors_timeseries(air_quality_timeseries, "1h")
     traffic_timeseries = resample_sensors_timeseries(traffic_timeseries, "1h")
 
     air_quality_timeseries = convert_long_df_to_wide(air_quality_timeseries)
     traffic_timeseries = convert_long_df_to_wide(traffic_timeseries)
 
-    print(air_quality_timeseries.head(10))
-    print(traffic_timeseries.head(10))
-
+    combined_df = pd.concat([air_quality_timeseries, traffic_timeseries], axis=1)
+    fig = crate_correlation_heatmap(combined_df.corr())
 
 if __name__ == "__main__":
     main()
