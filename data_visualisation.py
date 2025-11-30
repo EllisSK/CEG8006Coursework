@@ -224,8 +224,6 @@ def create_correlation_heatmap(corr_df: pd.DataFrame) -> go.Figure:
             "len": 1
         }
     )
-
-    fig.show()
     
     return fig
 
