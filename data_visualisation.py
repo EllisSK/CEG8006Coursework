@@ -170,6 +170,18 @@ def create_air_quality_road_links_site_location_plot(sensor_locations: gpd.GeoDa
         name="Traffic Flow Routes",
         showlegend=True,
     ))
+
+    fig.add_trace(go.Scattermapbox(
+        lat=[building_location.y],
+        lon=[building_location.x],
+        mode="markers",
+        marker=go.scattermapbox.Marker(
+            size=15,
+        ),
+        name='Proposed Building',
+        text=["Proposed Site Location"],
+        showlegend=True
+    ))
     
     return fig
 

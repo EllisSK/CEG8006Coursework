@@ -105,9 +105,24 @@ def convert_long_df_to_wide(long_df: pd.DataFrame) -> pd.DataFrame:
 
     return wide_df
 
-def create_correlation_matrix(air_quality_df: pd.DataFrame, traffic_df:pd.DataFrame) -> pd.DataFrame:
-    #Remove days where wind speed avg is greater than 3m/s
-    return pd.DataFrame()
+def create_correlation_matrix(long_df: pd.DataFrame) -> pd.DataFrame:
+    wind_columns = long_df.filter(like="Wind Speed")
+    time_step_mean_wind  = wind_columns.mean(axis=1)
+    return long_df[time_step_mean_wind < 3].corr()
+
+def clean_data(df: pd.DataFrame, freq: str, max_gap: int=4) -> pd.DataFrame:
+    df = df.copy()
+
+    full_idx = pd.date_range(start=df.index.min(), end=df.index.max(), freq=freq)
+    df = df.reindex(full_idx)
+    df.index.name = "Timestamp"
+    original_nans = df.isna().sum().sum()
+    df = df.interpolate(method="time", limit=max_gap, limit_direction="both")
+    remaining_nans = df.isna().sum().sum()
+    nans_removed = original_nans - remaining_nans
+    print(f"Cleaning removed {nans_removed} NaN values, {remaining_nans} remain.")
+
+    return df
 
 def decompose_timeseries():
     pass

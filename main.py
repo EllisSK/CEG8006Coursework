@@ -42,13 +42,16 @@ def main():
     fig = create_air_quality_road_links_site_location_plot(air_quality_sensor_locations, road_geometries, new_building_location)
     save_figure(fig, "sensors_roads_building")
 
-    data_start = datetime.datetime(2023,5,5)
-    data_end = datetime.datetime.now()
+    data_start = datetime.datetime(2025,5,10)
+    data_end = datetime.datetime(2025,5,15)
 
     air_quality_timeseries = get_sensors_timeseries(air_quality_sensors, data_start, data_end)
     traffic_timeseries = get_sensors_timeseries(vehicle_sensors, data_start, data_end)
 
-    air_quality_timeseries = clip_timeseries_by_variable(air_quality_timeseries, "NO2")
+    air_quality_timeseries.to_csv("outputs/data/air.csv")
+    traffic_timeseries.to_csv("outputs/data/traffic.csv")
+
+    air_quality_timeseries = clip_timeseries_by_variable(air_quality_timeseries, ["NO2", "Wind Speed"])
     traffic_timeseries = clip_timeseries_by_variable(traffic_timeseries, "Journey Time")
     
     air_quality_timeseries = resample_sensors_timeseries(air_quality_timeseries, "1h")
@@ -58,7 +61,9 @@ def main():
     traffic_timeseries = convert_long_df_to_wide(traffic_timeseries)
 
     combined_df = pd.concat([air_quality_timeseries, traffic_timeseries], axis=1)
-    fig = crate_correlation_heatmap(combined_df.corr())
+    combined_df = clean_data(combined_df, "1h")
+    corr_df = create_correlation_matrix(combined_df)
+    fig = crate_correlation_heatmap(corr_df)
 
 if __name__ == "__main__":
     main()
