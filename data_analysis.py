@@ -9,6 +9,7 @@ import networkx as nx
 from shapely.geometry import Point
 from shapely.ops import unary_union
 from typing import Union, List
+from pathlib import Path
 
 from uo_api_interface import *
 
@@ -110,7 +111,7 @@ def create_correlation_matrix(long_df: pd.DataFrame) -> pd.DataFrame:
     time_step_mean_wind  = wind_columns.mean(axis=1)
     return long_df[time_step_mean_wind < 3].corr()
 
-def clean_data(df: pd.DataFrame, freq: str, max_gap: int=4) -> pd.DataFrame:
+def clean_data(df: pd.DataFrame, freq: str, max_gap: int=24) -> pd.DataFrame:
     df = df.copy()
 
     full_idx = pd.date_range(start=df.index.min(), end=df.index.max(), freq=freq)
@@ -121,6 +122,17 @@ def clean_data(df: pd.DataFrame, freq: str, max_gap: int=4) -> pd.DataFrame:
     remaining_nans = df.isna().sum().sum()
     nans_removed = original_nans - remaining_nans
     print(f"Cleaning removed {nans_removed} NaN values, {remaining_nans} remain.")
+
+    return df
+
+def import_archive_dataset(filepath: Path, sensors: list = []) -> pd.DataFrame:
+    df = pd.read_csv(filepath, index_col="Timestamp")
+    df.index = pd.to_datetime(df.index)
+    df = df.rename(columns={"Sensor Name" : "Sensor_Name"})
+    df["Flagged"] = False
+
+    if len(sensors) != 0:
+        df = df[df["Sensor_Name"].isin(sensors)]
 
     return df
 

@@ -185,9 +185,49 @@ def create_air_quality_road_links_site_location_plot(sensor_locations: gpd.GeoDa
     
     return fig
 
-def crate_correlation_heatmap(corr_df:pd.DataFrame) -> go.Figure:
-    fig = px.imshow(corr_df)
+def create_correlation_heatmap(corr_df: pd.DataFrame) -> go.Figure:
+    clean_df = corr_df.dropna(axis=0, how="all").dropna(axis=1, how="all")
+    
+    fig = px.imshow(
+        clean_df,
+        labels={
+            "x": "Features",
+            "y": "Features",
+            "color": "Correlation"
+        },
+        template="presentation",
+        color_continuous_scale=["red", "yellow", "green"],
+        range_color=[-1, 1]
+    )
+    
+    fig.update_layout(
+        width=1000,
+        height=1000,
+        xaxis_title="Features",
+        yaxis_title="Features",
+        title="Correlation Heatmap",
+        xaxis={
+            "automargin": True,
+            "tickmode": "linear",
+            "dtick": 1,
+            "tickangle": -90,
+            "tickfont": {"size": 10}
+        },
+        yaxis={
+            "automargin": True,
+            "tickmode": "linear",
+            "dtick": 1,
+            "tickfont": {"size": 10}
+        },
+        coloraxis_colorbar={
+            "thickness": 30,
+            "len": 1
+        }
+    )
+
     fig.show()
+    
+    return fig
 
 def create_air_quality_line_plot():
     pass
