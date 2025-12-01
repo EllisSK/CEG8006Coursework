@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from shapely.geometry import Point
+from plotly.subplots import make_subplots
 from pathlib import Path
 
 def save_figure(fig: go.Figure, name: str):
@@ -233,8 +234,90 @@ def create_air_quality_line_plot():
 def create_journey_time_line_plot():
     pass
 
-def create_decomposed_timeseries_plot():
-    pass
+def create_decomposed_timeseries_plot(decomp_df: pd.DataFrame) -> go.Figure:
+    known_periods = {
+        "Daily": ("hour", "Average Daily Pattern"),
+        "Weekly": ("dayofweek", "Average Weekly Pattern"),
+        "Monthly": ("month", "Average Monthly Pattern")
+    }
+
+    found_periods = [col for col in decomp_df.columns if col in known_periods]
+
+    fig = make_subplots(
+        rows=len(found_periods), 
+        cols=1, 
+        subplot_titles=[known_periods[col][1] for col in found_periods],
+        vertical_spacing=0.1
+    )
+
+    for i, col in enumerate(found_periods):
+        time_attr = known_periods[col][0]
+        
+        avg_profile = decomp_df[col].groupby(getattr(decomp_df.index, time_attr)).mean()
+        
+        fig.add_trace(
+            go.Scatter(
+                x=avg_profile.index,
+                y=avg_profile.values,
+                name=col + " Average",
+                mode="lines+markers",
+                line=dict(color="firebrick", width=2)
+            ),
+            row=i+1, 
+            col=1
+        )
+        
+        fig.add_hline(y=0, line_dash="dot", row=i+1, col=1, line_color="gray")
+
+    fig.update_layout(
+        height=300 * len(found_periods),
+        title_text="Representative Seasonal Profiles (Averages)",
+        showlegend=False
+    )
+    
+    if "Weekly" in found_periods:
+        row_idx = found_periods.index("Weekly") + 1
+        fig.update_xaxes(
+            tickmode="array",
+            tickvals=[0, 1, 2, 3, 4, 5, 6],
+            ticktext=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            row=row_idx, col=1
+        )
+
+    return fig
+
+def create_decomposed_trend_plot(decomp_df: pd.DataFrame) -> go.Figure:
+    n_components = decomp_df.shape[1]
+    cols = decomp_df.columns
+
+    fig = make_subplots(
+        rows=n_components, 
+        cols=1, 
+        shared_xaxes=True,
+        subplot_titles=cols,
+        vertical_spacing=0.05
+    )
+
+    for i, col in enumerate(cols):
+        fig.add_trace(
+            go.Scatter(
+                x=decomp_df.index, 
+                y=decomp_df[col], 
+                name=col,
+                mode="lines",
+                line=dict(width=1.5, color="navy" if col == "Original" else "teal")
+            ),
+            row=i+1, 
+            col=1
+        )
+
+    fig.update_layout(
+        height=300 * n_components,
+        title_text="Timeseries Decomposition Trends",
+        showlegend=False
+    )
+
+    return fig
 
 def create_air_polution_heatmap():
     pass

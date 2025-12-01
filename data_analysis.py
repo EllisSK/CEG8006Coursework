@@ -10,6 +10,7 @@ from shapely.geometry import Point
 from shapely.ops import unary_union
 from typing import Union, List
 from pathlib import Path
+from statsmodels.tsa.seasonal import MSTL
 
 from uo_api_interface import *
 
@@ -136,5 +137,25 @@ def import_archive_dataset(filepath: Path, sensors: list = []) -> pd.DataFrame:
 
     return df
 
-def decompose_timeseries():
-    pass
+def decompose_timeseries(index: pd.Index, data: pd.Series):
+    data = data.interpolate(method="linear")
+    
+    mstl = MSTL(data, periods=[24, 168, 730])
+    res =  mstl.fit()
+
+    trend = res.trend
+    seasonal = res.seasonal
+    resid = res.resid
+
+    name_map = {
+        "seasonal_24" : "Daily",
+        "seasonal_168" : "Weekly",
+        "seasonal_730" : "Monthly",
+        "seasonal_8760" : "Yearly"
+    }
+
+    seasonal.rename(columns=name_map, inplace=True)
+
+    results_df = pd.concat([data.rename("Original"), trend, seasonal, resid], axis=1)
+
+    return results_df

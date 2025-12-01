@@ -62,5 +62,13 @@ def main():
     fig = create_correlation_heatmap(corr_df)
     save_figure(fig, "corr_heatmap")
 
+    decomposed_timeseries = decompose_timeseries(traffic_timeseries.index, traffic_timeseries[f"{vehicle_sensors[0]}_Journey Time"])
+    
+    fig = create_decomposed_trend_plot(decomposed_timeseries)
+    save_figure(fig, "decomposed_trend")
+
+    fig = create_decomposed_timeseries_plot(decomposed_timeseries)
+    save_figure(fig, "decomposed_timeseries")
+
 if __name__ == "__main__":
     main()
