@@ -62,13 +62,35 @@ def main():
     fig = create_correlation_heatmap(corr_df)
     save_figure(fig, "corr_heatmap")
 
+    fig = create_air_quality_road_links_site_location_plot(air_quality_sensor_locations[air_quality_sensor_locations['Sensor_Name'] == 'PER_AIRMON_MONITOR1157100'], road_geometries[road_geometries['Sensor_Name'] == vehicle_sensors[0]], new_building_location)
+    save_figure(fig, "single_sensors_roads_building")
+
     decomposed_timeseries = decompose_timeseries(traffic_timeseries.index, traffic_timeseries[f"{vehicle_sensors[0]}_Journey Time"])
     
     fig = create_decomposed_trend_plot(decomposed_timeseries)
-    save_figure(fig, "decomposed_trend")
+    save_figure(fig, "traffic_decomposed_trend")
 
     fig = create_decomposed_timeseries_plot(decomposed_timeseries)
-    save_figure(fig, "decomposed_timeseries")
+    save_figure(fig, "traffic_decomposed_timeseries")
+
+    decomposed_timeseries = decompose_timeseries(air_quality_timeseries.index, air_quality_timeseries["PER_AIRMON_MONITOR1157100_NOx"])
+
+    fig = create_decomposed_trend_plot(decomposed_timeseries)
+    save_figure(fig, "air_decomposed_trend")
+
+    fig = create_decomposed_timeseries_plot(decomposed_timeseries)
+    save_figure(fig, "air_decomposed_timeseries")
+
+    worst_case, normal_case = get_valid_scenario_dates(air_quality_timeseries, "NO2")
+
+    fig = create_air_polution_heatmap(air_quality_timeseries, air_quality_sensor_locations, worst_case, "NO2")
+    save_figure(fig, "rush_hour_air_quality")
+
+    fig = create_air_polution_heatmap(air_quality_timeseries, air_quality_sensor_locations, normal_case, "NO2")
+    save_figure(fig, "normal_air_quality")
+
+    fig = create_sensor_boxplots(combined_df, air_quality_sensors[0])
+    save_figure(fig, "box_plots")
 
 if __name__ == "__main__":
     main()

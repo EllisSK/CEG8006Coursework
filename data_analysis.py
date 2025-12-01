@@ -115,6 +115,25 @@ def create_correlation_matrix(long_df: pd.DataFrame) -> pd.DataFrame:
 def clean_data(df: pd.DataFrame, freq: str, max_gap: int=24) -> pd.DataFrame:
     df = df.copy()
 
+    negatives_mask = df < 0
+    negatives_count = negatives_mask.sum().sum()
+    df[negatives_mask] = np.nan
+    print(f"Negative value filtering removed {negatives_count} values.")
+
+    Q1 = df.quantile(0.25)
+    Q3 = df.quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower_bound = Q1 - 3.0 * IQR
+    upper_bound = Q3 + 3.0 * IQR
+
+    outlier_mask = (df < lower_bound) | (df > upper_bound)
+    outliers_count = outlier_mask.sum().sum()
+
+    df[outlier_mask] = np.nan
+
+    print(f"Outlier detection removed {outliers_count} values.")
+
     full_idx = pd.date_range(start=df.index.min(), end=df.index.max(), freq=freq)
     df = df.reindex(full_idx)
     df.index.name = "Timestamp"
@@ -137,7 +156,7 @@ def import_archive_dataset(filepath: Path, sensors: list = []) -> pd.DataFrame:
 
     return df
 
-def decompose_timeseries(index: pd.Index, data: pd.Series):
+def decompose_timeseries(index: pd.Index, data: pd.Series) -> pd.DataFrame:
     data = data.interpolate(method="linear")
     
     mstl = MSTL(data, periods=[24, 168, 730])
@@ -159,3 +178,29 @@ def decompose_timeseries(index: pd.Index, data: pd.Series):
     results_df = pd.concat([data.rename("Original"), trend, seasonal, resid], axis=1)
 
     return results_df
+
+def get_valid_scenario_dates(df: pd.DataFrame, variable_suffix: str):
+    relevant_cols = [c for c in df.columns if c.endswith(variable_suffix)]
+
+    if not relevant_cols:
+        raise Exception(f"No columns found with suffix {variable_suffix}")
+
+    check_col = relevant_cols[0]
+
+    thurs_data = df[(df.index.dayofweek == 3) & (df.index.hour == 17)]
+    valid_thurs = thurs_data.dropna(subset=[check_col])
+
+    if valid_thurs.empty:
+        raise Exception("No valid data found for any Thursday at 17:00")
+
+    worst_case_date = valid_thurs[check_col].idxmax().to_pydatetime()
+
+    mon_data = df[(df.index.dayofweek == 0) & (df.index.hour == 10)]
+    valid_mon = mon_data.dropna(subset=[check_col])
+
+    if valid_mon.empty:
+        raise Exception("No valid data found for any Monday at 10:00")
+
+    comparison_date = valid_mon.index[0].to_pydatetime()
+
+    return worst_case_date, comparison_date

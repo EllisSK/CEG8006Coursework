@@ -1,7 +1,11 @@
+import datetime
+
 import pandas as pd
 import geopandas as gpd
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
+from scipy.interpolate import griddata
 
 from shapely.geometry import Point
 from plotly.subplots import make_subplots
@@ -228,12 +232,6 @@ def create_correlation_heatmap(corr_df: pd.DataFrame) -> go.Figure:
     
     return fig
 
-def create_air_quality_line_plot():
-    pass
-
-def create_journey_time_line_plot():
-    pass
-
 def create_decomposed_timeseries_plot(decomp_df: pd.DataFrame) -> go.Figure:
     known_periods = {
         "Daily": ("hour", "Average Daily Pattern"),
@@ -319,5 +317,120 @@ def create_decomposed_trend_plot(decomp_df: pd.DataFrame) -> go.Figure:
 
     return fig
 
-def create_air_polution_heatmap():
-    pass
+def create_air_polution_heatmap(air_quality_timseries: pd.DataFrame, air_quality_sensors: gpd.GeoDataFrame, target_datetime: datetime.datetime, variable: str) -> go.Figure:
+    if target_datetime not in air_quality_timseries.index:
+        raise ValueError(f"Timestamp {target_datetime} not found in timeseries index.")
+
+    data_row = air_quality_timseries.loc[target_datetime]
+    suffix = f"_{variable}"
+    relevant_cols = [col for col in data_row.index if col.endswith(suffix)]
+
+    if not relevant_cols:
+        raise ValueError(f"No columns found ending with \"{suffix}\"")
+
+    parsed_data = []
+    for col in relevant_cols:
+        sensor_name = col.rsplit("_", 1)[0]
+        value = data_row[col]
+        parsed_data.append({"Sensor_Name": sensor_name, "Value": value})
+
+    df_values = pd.DataFrame(parsed_data)
+
+    merged_df = df_values.merge(air_quality_sensors, on="Sensor_Name", how="inner")
+    merged_df = gpd.GeoDataFrame(merged_df, geometry="geometry")
+    merged_df = merged_df.dropna(subset=["Value"])
+
+    if merged_df.empty:
+        raise ValueError("No matching sensor data found after merging and cleaning.")
+
+    merged_df["lat"] = merged_df.geometry.y
+    merged_df["lon"] = merged_df.geometry.x
+
+    grid_x, grid_y = np.mgrid[
+        merged_df["lon"].min()-0.01 : merged_df["lon"].max()+0.01 : 100j,
+        merged_df["lat"].min()-0.01 : merged_df["lat"].max()+0.01 : 100j
+    ]
+
+    grid_z = griddata(
+        points=(merged_df["lon"], merged_df["lat"]),
+        values=merged_df["Value"],
+        xi=(grid_x, grid_y),
+        method="linear"
+    )
+
+    flat_lon = grid_x.flatten()
+    flat_lat = grid_y.flatten()
+    flat_val = grid_z.flatten()
+
+    mask = ~np.isnan(flat_val)
+    flat_lon = flat_lon[mask]
+    flat_lat = flat_lat[mask]
+    flat_val = flat_val[mask]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Densitymapbox(
+        lat=flat_lat,
+        lon=flat_lon,
+        z=flat_val,
+        radius=15,
+        colorscale="RdYlGn_r",
+        opacity=0.7,
+        zmin=0,
+        zmax=80,
+        hoverinfo="skip"
+    ))
+
+    fig.add_trace(go.Scattermapbox(
+        lat=merged_df["lat"],
+        lon=merged_df["lon"],
+        mode="markers",
+        marker=dict(size=10, color="black", symbol="circle"),
+        text=merged_df["Sensor_Name"],
+        hovertext=merged_df["Value"].apply(lambda x: f"{x:.2f}"),
+        hovertemplate="<b>%{text}</b><br>Value: %{hovertext}<extra></extra>"
+    ))
+
+    fig.update_layout(
+        title=f"Interpolated {variable} - {target_datetime}",
+        mapbox_style="open-street-map",
+        mapbox=dict(
+            center=dict(lat=merged_df["lat"].mean(), lon=merged_df["lon"].mean()),
+            zoom=12
+        ),
+        margin={"r": 0, "t": 40, "l": 0, "b": 0},
+        showlegend=False
+    )
+
+    return fig
+
+def create_sensor_boxplots(air_quality_timeseries: pd.DataFrame, sensor_name: str) -> go.Figure:
+    fig = go.Figure()
+    
+    prefix = f"{sensor_name}_"
+    relevant_cols = [col for col in air_quality_timeseries.columns if col.startswith(prefix)]
+    
+    excluded_vars = ["Wind Speed", "Wind Direction"]
+
+    for col in relevant_cols:
+        variable_label = col[len(prefix):]
+        
+        if variable_label in excluded_vars:
+            continue
+        
+        fig.add_trace(go.Box(
+            y=air_quality_timeseries[col],
+            name=variable_label,
+            boxpoints=False
+        ))
+
+    fig.update_layout(
+        title=f"Pollution Statistics for sensor {sensor_name}",
+        yaxis_title="Concentration (µg/m³ or ppb)",
+        xaxis_title="Pollutant Variable",
+        template="plotly_white",
+        showlegend=False,
+        font=dict(family="Arial", size=12)
+    )
+
+    return fig
