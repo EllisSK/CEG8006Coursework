@@ -4,6 +4,12 @@ import geopandas as gpd
 
 
 def get_boundry_of_location(location: str) -> gpd.GeoDataFrame:
+    """
+    Function that fetches a boundary from the Open Geography Portal API.
+
+    Returns a GeoPandas GeoDataFrame with the boundary.
+    """
+    
     url = f"https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Local_Authority_Districts_May_2024_Boundaries_UK_BGC/FeatureServer/0/query"
 
     p = {"where": f"LAD24NM = '{location}'", "outFields": "*", "outSR": "4326", "f": "geojson"}
